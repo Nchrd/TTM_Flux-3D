@@ -102,6 +102,12 @@ namespace OmekaToUnity
         [JsonProperty("rdfs:comment", NullValueHandling = NullValueHandling.Ignore)]
         public BiboNumPage[] RdfsComment { get; set; }
 
+        [JsonProperty("time:hasBeginning", NullValueHandling = NullValueHandling.Ignore)]
+        public BiboNumPage[] TimeHasBeginning { get; set; }
+
+        [JsonProperty("time:hasEnd", NullValueHandling = NullValueHandling.Ignore)]
+        public BiboNumPage[] TimeHasEnd { get; set; }
+
         [JsonProperty("rdfs:label", NullValueHandling = NullValueHandling.Ignore)]
         public BiboNumPage[] RdfsLabel { get; set; }
 
@@ -190,7 +196,7 @@ namespace OmekaToUnity
     public partial class BiboNumPage
     {
         [JsonProperty("type")]
-        public TypeEnum Type { get; set; }
+        public BiboNumPageType Type { get; set; }
 
         [JsonProperty("property_id")]
         public long PropertyId { get; set; }
@@ -208,18 +214,18 @@ namespace OmekaToUnity
     public partial class CrmP108HasProduced
     {
         [JsonProperty("type")]
-        public TypeEnum Type { get; set; }
+        public CrmP108HasProducedType Type { get; set; }
 
         [JsonProperty("property_id")]
         public long PropertyId { get; set; }
 
         [JsonProperty("property_label")]
-        public string PropertyLabel { get; set; }
+        public CrmP108HasProducedPropertyLabel PropertyLabel { get; set; }
 
         [JsonProperty("is_public")]
         public bool IsPublic { get; set; }
 
-        [JsonProperty("@id", NullValueHandling = NullValueHandling.Ignore)]
+        [JsonProperty("@id")]
         public Uri Id { get; set; }
 
         [JsonProperty("value_resource_id", NullValueHandling = NullValueHandling.Ignore)]
@@ -245,15 +251,12 @@ namespace OmekaToUnity
 
         [JsonProperty("o:label", NullValueHandling = NullValueHandling.Ignore)]
         public string OLabel { get; set; }
-
-        [JsonProperty("@value", NullValueHandling = NullValueHandling.Ignore)]
-        public string Value { get; set; }
     }
 
     public partial class CrmP53HasFormerOrCurrentLocation
     {
         [JsonProperty("type")]
-        public TypeEnum Type { get; set; }
+        public BiboNumPageType Type { get; set; }
 
         [JsonProperty("property_id")]
         public long PropertyId { get; set; }
@@ -313,17 +316,21 @@ namespace OmekaToUnity
         public string Square { get; set; }
     }
 
-    public enum BiboNumPagePropertyLabel { AlternativeTitle, Color, Comment, DateIssued, Description, HasDateOfBirth, HasDateOfDeath, HasDimension, Label, LegalName, NumberOfPages, PreferredLabel, Title };
+    public enum BiboNumPagePropertyLabel { AlternativeTitle, Color, Comment, DateIssued, Description, HasBeginning, HasDateOfBirth, HasDateOfDeath, HasDimension, HasEnd, Label, LegalName, NumberOfPages, PreferredLabel, Title };
 
-    public enum TypeEnum { Literal, Resource, Uri };
+    public enum BiboNumPageType { Literal, Uri };
+
+    public enum CrmP108HasProducedPropertyLabel { ConsistsOf, Creator, Defines, Documents, FallsWithin, HasCurrentPermanentLocation, HasFormerOrCurrentOwner, HasModified, HasProduced, HasProfessionOrOccupation, HasRelatedPlaceOfCollectiveAgent, HasType, IsComposedOf, Moved, MovedFrom, MovedTo, SameAs, TookPlaceOnOrWithin, UsedSpecificObject, UsedSpecificTechnique };
 
     public enum ThumbnailType { ImageJpeg, ImagePng };
+
+    public enum CrmP108HasProducedType { Resource, Uri };
 
     public enum ValueResourceName { Items };
 
     public enum CrmP53HasFormerOrCurrentLocationPropertyLabel { HasFormerOrCurrentLocation };
 
-    public enum TypeElement { BiboManual, CrmE12Production, CrmE18PhysicalThing, CrmE20BiologicalObject, CrmE22HumanMadeObject, CrmE4Period, CrmE53Place, CrmE55Type, CrmE92SpacetimeVolume, CrmE9Move, OItem, RdacC10004, RdacC10011 };
+    public enum TypeElement { BiboManual, CrmE12Production, CrmE18PhysicalThing, CrmE20BiologicalObject, CrmE22HumanMadeObject, CrmE4Period, CrmE53Place, CrmE55Type, CrmE92SpacetimeVolume, CrmE9Move, OItem, RdacC10004, RdacC10011, SchemaPlace };
 
     public partial class OmekaToUnity
     {
@@ -345,8 +352,10 @@ namespace OmekaToUnity
             {
                 TypeElementConverter.Singleton,
                 BiboNumPagePropertyLabelConverter.Singleton,
-                TypeEnumConverter.Singleton,
+                BiboNumPageTypeConverter.Singleton,
+                CrmP108HasProducedPropertyLabelConverter.Singleton,
                 ThumbnailTypeConverter.Singleton,
+                CrmP108HasProducedTypeConverter.Singleton,
                 ValueResourceNameConverter.Singleton,
                 CrmP53HasFormerOrCurrentLocationPropertyLabelConverter.Singleton,
                 new IsoDateTimeConverter { DateTimeStyles = DateTimeStyles.AssumeUniversal }
@@ -390,6 +399,8 @@ namespace OmekaToUnity
                     return TypeElement.RdacC10004;
                 case "rdac:C10011":
                     return TypeElement.RdacC10011;
+                case "schema:Place":
+                    return TypeElement.SchemaPlace;
             }
             throw new Exception("Cannot unmarshal type TypeElement");
         }
@@ -443,6 +454,9 @@ namespace OmekaToUnity
                 case TypeElement.RdacC10011:
                     serializer.Serialize(writer, "rdac:C10011");
                     return;
+                case TypeElement.SchemaPlace:
+                    serializer.Serialize(writer, "schema:Place");
+                    return;
             }
             throw new Exception("Cannot marshal type TypeElement");
         }
@@ -472,12 +486,16 @@ namespace OmekaToUnity
                     return BiboNumPagePropertyLabel.Color;
                 case "comment":
                     return BiboNumPagePropertyLabel.Comment;
+                case "has beginning":
+                    return BiboNumPagePropertyLabel.HasBeginning;
                 case "has date of birth":
                     return BiboNumPagePropertyLabel.HasDateOfBirth;
                 case "has date of death":
                     return BiboNumPagePropertyLabel.HasDateOfDeath;
                 case "has dimension":
                     return BiboNumPagePropertyLabel.HasDimension;
+                case "has end":
+                    return BiboNumPagePropertyLabel.HasEnd;
                 case "label":
                     return BiboNumPagePropertyLabel.Label;
                 case "legalName":
@@ -518,6 +536,9 @@ namespace OmekaToUnity
                 case BiboNumPagePropertyLabel.Comment:
                     serializer.Serialize(writer, "comment");
                     return;
+                case BiboNumPagePropertyLabel.HasBeginning:
+                    serializer.Serialize(writer, "has beginning");
+                    return;
                 case BiboNumPagePropertyLabel.HasDateOfBirth:
                     serializer.Serialize(writer, "has date of birth");
                     return;
@@ -526,6 +547,9 @@ namespace OmekaToUnity
                     return;
                 case BiboNumPagePropertyLabel.HasDimension:
                     serializer.Serialize(writer, "has dimension");
+                    return;
+                case BiboNumPagePropertyLabel.HasEnd:
+                    serializer.Serialize(writer, "has end");
                     return;
                 case BiboNumPagePropertyLabel.Label:
                     serializer.Serialize(writer, "label");
@@ -546,9 +570,9 @@ namespace OmekaToUnity
         public static readonly BiboNumPagePropertyLabelConverter Singleton = new BiboNumPagePropertyLabelConverter();
     }
 
-    internal class TypeEnumConverter : JsonConverter
+    internal class BiboNumPageTypeConverter : JsonConverter
     {
-        public override bool CanConvert(Type t) => t == typeof(TypeEnum) || t == typeof(TypeEnum?);
+        public override bool CanConvert(Type t) => t == typeof(BiboNumPageType) || t == typeof(BiboNumPageType?);
 
         public override object ReadJson(JsonReader reader, Type t, object existingValue, JsonSerializer serializer)
         {
@@ -557,13 +581,11 @@ namespace OmekaToUnity
             switch (value)
             {
                 case "literal":
-                    return TypeEnum.Literal;
-                case "resource":
-                    return TypeEnum.Resource;
+                    return BiboNumPageType.Literal;
                 case "uri":
-                    return TypeEnum.Uri;
+                    return BiboNumPageType.Uri;
             }
-            throw new Exception("Cannot unmarshal type TypeEnum");
+            throw new Exception("Cannot unmarshal type BiboNumPageType");
         }
 
         public override void WriteJson(JsonWriter writer, object untypedValue, JsonSerializer serializer)
@@ -573,23 +595,151 @@ namespace OmekaToUnity
                 serializer.Serialize(writer, null);
                 return;
             }
-            var value = (TypeEnum)untypedValue;
+            var value = (BiboNumPageType)untypedValue;
             switch (value)
             {
-                case TypeEnum.Literal:
+                case BiboNumPageType.Literal:
                     serializer.Serialize(writer, "literal");
                     return;
-                case TypeEnum.Resource:
-                    serializer.Serialize(writer, "resource");
-                    return;
-                case TypeEnum.Uri:
+                case BiboNumPageType.Uri:
                     serializer.Serialize(writer, "uri");
                     return;
             }
-            throw new Exception("Cannot marshal type TypeEnum");
+            throw new Exception("Cannot marshal type BiboNumPageType");
         }
 
-        public static readonly TypeEnumConverter Singleton = new TypeEnumConverter();
+        public static readonly BiboNumPageTypeConverter Singleton = new BiboNumPageTypeConverter();
+    }
+
+    internal class CrmP108HasProducedPropertyLabelConverter : JsonConverter
+    {
+        public override bool CanConvert(Type t) => t == typeof(CrmP108HasProducedPropertyLabel) || t == typeof(CrmP108HasProducedPropertyLabel?);
+
+        public override object ReadJson(JsonReader reader, Type t, object existingValue, JsonSerializer serializer)
+        {
+            if (reader.TokenType == JsonToken.Null) return null;
+            var value = serializer.Deserialize<string>(reader);
+            switch (value)
+            {
+                case "Creator":
+                    return CrmP108HasProducedPropertyLabel.Creator;
+                case "consists of":
+                    return CrmP108HasProducedPropertyLabel.ConsistsOf;
+                case "defines":
+                    return CrmP108HasProducedPropertyLabel.Defines;
+                case "documents":
+                    return CrmP108HasProducedPropertyLabel.Documents;
+                case "falls within":
+                    return CrmP108HasProducedPropertyLabel.FallsWithin;
+                case "has current permanent location":
+                    return CrmP108HasProducedPropertyLabel.HasCurrentPermanentLocation;
+                case "has former or current owner":
+                    return CrmP108HasProducedPropertyLabel.HasFormerOrCurrentOwner;
+                case "has modified":
+                    return CrmP108HasProducedPropertyLabel.HasModified;
+                case "has produced":
+                    return CrmP108HasProducedPropertyLabel.HasProduced;
+                case "has profession or occupation":
+                    return CrmP108HasProducedPropertyLabel.HasProfessionOrOccupation;
+                case "has related place of collective agent":
+                    return CrmP108HasProducedPropertyLabel.HasRelatedPlaceOfCollectiveAgent;
+                case "has type":
+                    return CrmP108HasProducedPropertyLabel.HasType;
+                case "is composed of":
+                    return CrmP108HasProducedPropertyLabel.IsComposedOf;
+                case "moved":
+                    return CrmP108HasProducedPropertyLabel.Moved;
+                case "moved from":
+                    return CrmP108HasProducedPropertyLabel.MovedFrom;
+                case "moved to":
+                    return CrmP108HasProducedPropertyLabel.MovedTo;
+                case "sameAs":
+                    return CrmP108HasProducedPropertyLabel.SameAs;
+                case "took place on or within":
+                    return CrmP108HasProducedPropertyLabel.TookPlaceOnOrWithin;
+                case "used specific object":
+                    return CrmP108HasProducedPropertyLabel.UsedSpecificObject;
+                case "used specific technique":
+                    return CrmP108HasProducedPropertyLabel.UsedSpecificTechnique;
+            }
+            throw new Exception("Cannot unmarshal type CrmP108HasProducedPropertyLabel");
+        }
+
+        public override void WriteJson(JsonWriter writer, object untypedValue, JsonSerializer serializer)
+        {
+            if (untypedValue == null)
+            {
+                serializer.Serialize(writer, null);
+                return;
+            }
+            var value = (CrmP108HasProducedPropertyLabel)untypedValue;
+            switch (value)
+            {
+                case CrmP108HasProducedPropertyLabel.Creator:
+                    serializer.Serialize(writer, "Creator");
+                    return;
+                case CrmP108HasProducedPropertyLabel.ConsistsOf:
+                    serializer.Serialize(writer, "consists of");
+                    return;
+                case CrmP108HasProducedPropertyLabel.Defines:
+                    serializer.Serialize(writer, "defines");
+                    return;
+                case CrmP108HasProducedPropertyLabel.Documents:
+                    serializer.Serialize(writer, "documents");
+                    return;
+                case CrmP108HasProducedPropertyLabel.FallsWithin:
+                    serializer.Serialize(writer, "falls within");
+                    return;
+                case CrmP108HasProducedPropertyLabel.HasCurrentPermanentLocation:
+                    serializer.Serialize(writer, "has current permanent location");
+                    return;
+                case CrmP108HasProducedPropertyLabel.HasFormerOrCurrentOwner:
+                    serializer.Serialize(writer, "has former or current owner");
+                    return;
+                case CrmP108HasProducedPropertyLabel.HasModified:
+                    serializer.Serialize(writer, "has modified");
+                    return;
+                case CrmP108HasProducedPropertyLabel.HasProduced:
+                    serializer.Serialize(writer, "has produced");
+                    return;
+                case CrmP108HasProducedPropertyLabel.HasProfessionOrOccupation:
+                    serializer.Serialize(writer, "has profession or occupation");
+                    return;
+                case CrmP108HasProducedPropertyLabel.HasRelatedPlaceOfCollectiveAgent:
+                    serializer.Serialize(writer, "has related place of collective agent");
+                    return;
+                case CrmP108HasProducedPropertyLabel.HasType:
+                    serializer.Serialize(writer, "has type");
+                    return;
+                case CrmP108HasProducedPropertyLabel.IsComposedOf:
+                    serializer.Serialize(writer, "is composed of");
+                    return;
+                case CrmP108HasProducedPropertyLabel.Moved:
+                    serializer.Serialize(writer, "moved");
+                    return;
+                case CrmP108HasProducedPropertyLabel.MovedFrom:
+                    serializer.Serialize(writer, "moved from");
+                    return;
+                case CrmP108HasProducedPropertyLabel.MovedTo:
+                    serializer.Serialize(writer, "moved to");
+                    return;
+                case CrmP108HasProducedPropertyLabel.SameAs:
+                    serializer.Serialize(writer, "sameAs");
+                    return;
+                case CrmP108HasProducedPropertyLabel.TookPlaceOnOrWithin:
+                    serializer.Serialize(writer, "took place on or within");
+                    return;
+                case CrmP108HasProducedPropertyLabel.UsedSpecificObject:
+                    serializer.Serialize(writer, "used specific object");
+                    return;
+                case CrmP108HasProducedPropertyLabel.UsedSpecificTechnique:
+                    serializer.Serialize(writer, "used specific technique");
+                    return;
+            }
+            throw new Exception("Cannot marshal type CrmP108HasProducedPropertyLabel");
+        }
+
+        public static readonly CrmP108HasProducedPropertyLabelConverter Singleton = new CrmP108HasProducedPropertyLabelConverter();
     }
 
     internal class ThumbnailTypeConverter : JsonConverter
@@ -631,6 +781,47 @@ namespace OmekaToUnity
         }
 
         public static readonly ThumbnailTypeConverter Singleton = new ThumbnailTypeConverter();
+    }
+
+    internal class CrmP108HasProducedTypeConverter : JsonConverter
+    {
+        public override bool CanConvert(Type t) => t == typeof(CrmP108HasProducedType) || t == typeof(CrmP108HasProducedType?);
+
+        public override object ReadJson(JsonReader reader, Type t, object existingValue, JsonSerializer serializer)
+        {
+            if (reader.TokenType == JsonToken.Null) return null;
+            var value = serializer.Deserialize<string>(reader);
+            switch (value)
+            {
+                case "resource":
+                    return CrmP108HasProducedType.Resource;
+                case "uri":
+                    return CrmP108HasProducedType.Uri;
+            }
+            throw new Exception("Cannot unmarshal type CrmP108HasProducedType");
+        }
+
+        public override void WriteJson(JsonWriter writer, object untypedValue, JsonSerializer serializer)
+        {
+            if (untypedValue == null)
+            {
+                serializer.Serialize(writer, null);
+                return;
+            }
+            var value = (CrmP108HasProducedType)untypedValue;
+            switch (value)
+            {
+                case CrmP108HasProducedType.Resource:
+                    serializer.Serialize(writer, "resource");
+                    return;
+                case CrmP108HasProducedType.Uri:
+                    serializer.Serialize(writer, "uri");
+                    return;
+            }
+            throw new Exception("Cannot marshal type CrmP108HasProducedType");
+        }
+
+        public static readonly CrmP108HasProducedTypeConverter Singleton = new CrmP108HasProducedTypeConverter();
     }
 
     internal class ValueResourceNameConverter : JsonConverter
